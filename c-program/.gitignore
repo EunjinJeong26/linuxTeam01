@@ -1,0 +1,8 @@
+# 컴파일 결과물
+src/*.o
+diary
+
+# 런타임 데이터 (실제 데이터는 ~/diary/에 저장됨, 이 폴더는 구조 유지용)
+data/users.txt
+data/diaries/*/
+!data/diaries/.gitkeep
