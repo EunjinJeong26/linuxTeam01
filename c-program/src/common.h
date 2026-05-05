@@ -45,6 +45,7 @@ typedef struct {
 /* Diary 구조체 - 일기 1편의 정보 */
 typedef struct {
     char id[MAX_ID_LEN];
+    char filename[MAX_PATH_LEN];
     char author[MAX_USERNAME_LEN];
     char title[MAX_TITLE_LEN];
     char visibility[16];

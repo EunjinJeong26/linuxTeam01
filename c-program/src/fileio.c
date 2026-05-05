@@ -8,8 +8,12 @@
 
 #include "fileio.h"
 #include <sys/stat.h>
+#ifdef _WIN32
+#include <direct.h>
+#else
 #include <sys/types.h>
 #include <unistd.h>
+#endif
 
 int dir_exists(const char *path) {
     struct stat st;
@@ -18,7 +22,11 @@ int dir_exists(const char *path) {
 
 int make_dir(const char *path) {
     if (dir_exists(path)) return RET_OK;
+#ifdef _WIN32
+    if (_mkdir(path) == 0) return RET_OK;
+#else
     if (mkdir(path, 0755) == 0) return RET_OK;
+#endif
     perror(path);
     return RET_FAIL;
 }
