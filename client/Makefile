@@ -1,6 +1,6 @@
 CC      = gcc
 CFLAGS  = -Wall -Wextra -g
-LDFLAGS = -lcurl
+LDFLAGS = -lcurl -lsqlite3
 
 TARGET  = devlog
 SRCDIR  = src
