@@ -1,0 +1,11 @@
+[Unit]
+Description=Devlog background notification daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/devlogd
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+# SQLite DB (server-side, not versioned)
+server/devlog.sqlite
+
+# Build artifacts
+client/devlog
+client/src/*.o
+daemon/devlogd
+
+# IDE
+.vscode/
+.idea/
