@@ -8,10 +8,16 @@
 #include "git_scan.h"
 #include "notify.h"
 #include "session.h"
+#include "db.h"
 
 static void print_help(void);
 
 int main(int argc, char *argv[]) {
+    sqlite3 *db = db_open();
+    if (!db) { fprintf(stderr, "DB 초기화 실패\n"); return 1; }
+    db_init(db);
+    db_close(db);
+
     if (argc < 2) {
         print_help();
         return 1;
