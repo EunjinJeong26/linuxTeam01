@@ -262,7 +262,7 @@ CREATE TABLE git_dirs (
 CREATE TABLE teams (
     team_id     INTEGER PRIMARY KEY,  -- 서버 발급 팀 ID
     team_name   TEXT NOT NULL,        -- 팀 이름
-    invite_code TEXT NOT NULL,        -- 신규 멤버 참가용 초대 코드 (영문 소문자+숫자 8자리)
+    invite_code TEXT NOT NULL,        -- 신규 멤버 참가용 초대 코드 (영문 대문자+숫자 8자리)
     created_at  TEXT NOT NULL         -- 팀 생성 시각 (ISO 8601)
 );
 
