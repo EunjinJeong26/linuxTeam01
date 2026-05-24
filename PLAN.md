@@ -207,6 +207,7 @@ linuxTeam01/
 │   ├── src/
 │   │   ├── main.c                 - 명령어 처리 엔트리포인트
 │   │   ├── common.h               - 공통 구조체 및 상수 정의
+│   │   ├── db.c / .h               - SQLite 연결 및 스키마 초기화 (Phase 1 추가)
 │   │   ├── session.c / .h         - 세션 관리
 │   │   ├── auth.c / .h            - 로그인 및 JWT 처리
 │   │   ├── api.c / .h             - 서버 API(libcurl) 통신
@@ -237,7 +238,7 @@ linuxTeam01/
 
 ```text
 ~/.devlog/
-├── cache.db    - SQLite 로컬 캐시 (teams, members, logs, git_dirs 테이블)
+├── cache.db    - SQLite 로컬 캐시 (users, teams, members, logs, git_dirs 테이블)
 └── session     - 인증된 사용자의 세션 토큰(JWT) 보관 (개인 평문)
 ```
 
@@ -246,47 +247,48 @@ linuxTeam01/
 ```sql
 -- 로컬 인증용 사용자 계정 (Phase 1 전용; Phase 2 서버 연동 후 미사용)
 CREATE TABLE users (
-    username    TEXT PRIMARY KEY,
-    password    TEXT NOT NULL,
-    created_at  TEXT NOT NULL
+    username    TEXT PRIMARY KEY,  -- 사용자 식별자 (로그인 ID)
+    password    TEXT NOT NULL,     -- 평문 비밀번호 (Phase 1 한정)
+    created_at  TEXT NOT NULL      -- 계정 생성 시각 (ISO 8601)
 );
 
 -- 스캔 대상 git 디렉터리 목록 (devlog git add/remove 로 관리)
 CREATE TABLE git_dirs (
-    path       TEXT PRIMARY KEY,
-    added_at   TEXT NOT NULL
+    path       TEXT PRIMARY KEY,  -- 등록된 디렉터리 절대 경로
+    added_at   TEXT NOT NULL      -- 등록 시각 (ISO 8601)
 );
 
 -- 팀 정보 캐시 (서버 동기화)
 CREATE TABLE teams (
-    team_id     INTEGER PRIMARY KEY,
-    team_name   TEXT NOT NULL,
-    invite_code TEXT NOT NULL,
-    created_at  TEXT NOT NULL
+    team_id     INTEGER PRIMARY KEY,  -- 서버 발급 팀 ID
+    team_name   TEXT NOT NULL,        -- 팀 이름
+    invite_code TEXT NOT NULL,        -- 신규 멤버 참가용 초대 코드 (영문 소문자+숫자 8자리)
+    created_at  TEXT NOT NULL         -- 팀 생성 시각 (ISO 8601)
 );
 
 -- 팀 멤버십 캐시 (서버 동기화)
 CREATE TABLE members (
-    team_id   INTEGER NOT NULL,
-    username  TEXT    NOT NULL,
-    role      TEXT    NOT NULL,
-    joined_at TEXT    NOT NULL,
+    team_id   INTEGER NOT NULL,  -- 소속 팀 ID (teams.team_id 참조)
+    username  TEXT    NOT NULL,  -- 멤버 사용자명 (users.username 참조)
+    role      TEXT    NOT NULL,  -- 팀 내 역할: 'owner' 또는 'member'
+    joined_at TEXT    NOT NULL,  -- 팀 합류 시각 (ISO 8601)
     PRIMARY KEY (team_id, username)
 );
 
 -- 로그 캐시 (서버 동기화 및 오프라인 열람)
 CREATE TABLE logs (
-    log_id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    username        TEXT    NOT NULL,
-    team_id         INTEGER NOT NULL,
-    session_date    TEXT    NOT NULL,  -- YYYY-MM-DD
-    session_hour    INTEGER NOT NULL,  -- 0~23
-    cpu_usage       REAL,
-    mem_usage       REAL,
-    git_commit_hash TEXT,
-    git_commit_msg  TEXT,
-    comment         TEXT,
-    posted_at       TEXT    NOT NULL
+    log_id          INTEGER PRIMARY KEY AUTOINCREMENT,        -- 로컬 자동 증가 ID
+    username        TEXT    NOT NULL,                         -- 로그 작성자
+    team_id         INTEGER NOT NULL,                         -- 소속 팀 ID
+    session_date    TEXT    NOT NULL,                         -- 세션 날짜 (YYYY-MM-DD)
+    session_hour    INTEGER NOT NULL,                         -- 세션 시각 (0~23, 매시 정각 기준)
+    cpu_usage       REAL,                                     -- CPU 사용률 (%, /proc/stat 파싱)
+    mem_usage       REAL,                                     -- 메모리 사용률 (%, /proc/meminfo 파싱)
+    git_commit_hash TEXT,                                     -- 최근 git 커밋 해시 (short)
+    git_commit_msg  TEXT,                                     -- 최근 git 커밋 메시지
+    comment         TEXT,                                     -- 사용자 입력 텍스트 (최대 150자)
+    posted_at       TEXT    NOT NULL,                         -- 로그 게시 시각 (ISO 8601)
+    UNIQUE(username, team_id, session_date, session_hour)     -- 동일 슬롯 중복 방지
 );
 ```
 
