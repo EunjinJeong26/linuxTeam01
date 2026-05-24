@@ -11,3 +11,4 @@
 - PLAN.md : Devlog 기획서
 - DECISIONS.md : PLAN.md에서 의사결정 로그 부분 분리하여 따로 표시 (토큰 절약)
 - DEMO.md : 로컬 프로토타입 테스트 방법 가이드
+- IMPLEMENTS.md : 구현 상황 기록 + 버그 & 개선안 작성
