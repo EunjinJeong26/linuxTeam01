@@ -7,7 +7,7 @@
 - **Rule of Thumb**: 명시된 구조를 임의로 변경하지 말고, 추가 패키지나 의존성을 도입할 때는 반드시 먼저 물어볼 것.
 
 ## 2. Tech Stack & Dependencies
-- **Client (C)**: `gcc`, `libcurl` (REST API), `cJSON` (JSON 파싱), `ncurses` (TUI 적용 시)
+- **Client (C)**: `gcc`, `libcurl` (REST API), `strstr` 기반 경량 파싱 (cJSON 미사용), `ncurses` (TUI 적용 시)
 - **Daemon (C)**: Systemd service, Unix Domain Socket (UDS), Cron/Timer
 - **Server (Java)**: Spring Boot 3.x, SQLite (JDBC), JWT Auth
 

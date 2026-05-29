@@ -9,3 +9,6 @@ daemon/devlogd
 # IDE
 .vscode/
 .idea/
+
+# Personal notes
+TODO.md
