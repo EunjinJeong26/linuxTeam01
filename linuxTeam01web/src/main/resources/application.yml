@@ -1,9 +1,8 @@
 spring:
   datasource:
     driver-class-name: org.sqlite.JDBC
-    url: jdbc:sqlite:devlog.db
+    url: jdbc:sqlite:devlog.sqlite
   jpa:
-    database-platform: org.hibernate.community.dialect.SQLiteDialect
     hibernate:
       ddl-auto: update
     show-sql: true
