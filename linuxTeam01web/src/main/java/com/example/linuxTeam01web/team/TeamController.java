@@ -1,6 +1,7 @@
 package com.example.linuxTeam01web.team;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,9 +16,8 @@ public class TeamController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    // 🌟 임시 인증 처리: @RequestHeader("X-User-Id")를 통해 어떤 유저가 요청했는지 파악합니다.
     public TeamDto.CreateResponse createTeam(
-            @RequestHeader("X-User-Id") Long userId,
+            @AuthenticationPrincipal Long userId,
             @RequestBody TeamDto.CreateRequest request) {
         return teamService.createTeam(userId, request);
     }
@@ -27,7 +27,7 @@ public class TeamController {
     @PostMapping("/join")
     @ResponseStatus(HttpStatus.OK) // 명세서 기준 200 OK
     public TeamDto.JoinResponse joinTeam(
-            @RequestHeader("X-User-Id") Long userId,
+            @AuthenticationPrincipal Long userId,
             @RequestBody TeamDto.JoinRequest request) {
         return teamService.joinTeam(userId, request);
     }
@@ -36,7 +36,7 @@ public class TeamController {
 
     @GetMapping("/me")
     @ResponseStatus(HttpStatus.OK)
-    public TeamDto.MyTeamResponse getMyTeam(@RequestHeader("X-User-Id") Long userId) {
+    public TeamDto.MyTeamResponse getMyTeam(@AuthenticationPrincipal Long userId) {
         return teamService.getMyTeam(userId);
     }
 
@@ -44,7 +44,7 @@ public class TeamController {
 
     @DeleteMapping("/me/delete")
     @ResponseStatus(HttpStatus.OK) // 성공 시 200 OK 반환
-    public TeamDto.MessageResponse leaveTeam(@RequestHeader("X-User-Id") Long userId) {
+    public TeamDto.MessageResponse leaveTeam(@AuthenticationPrincipal Long userId) {
         return teamService.leaveTeam(userId);
     }
 }
