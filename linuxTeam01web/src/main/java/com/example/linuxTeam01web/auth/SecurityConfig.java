@@ -26,7 +26,7 @@ public class SecurityConfig {
                 // 2. 인증 예외 경로 설정
                 .authorizeHttpRequests(auth -> auth
                         // 내부 에러 페이지(/error)를 반드시 허용해야 403 대신 정확한 MVC 에러를 확인할 수 있습니다.
-                        .requestMatchers("/auth/register", "/auth/login", "/error").permitAll()
+                        .requestMatchers("/auth/register", "/auth/login", "/error", "/teams/**").permitAll()
                         .anyRequest().authenticated()
                 );
 
