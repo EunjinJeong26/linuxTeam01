@@ -13,7 +13,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    private final JwtFilter jwtFilter; // 🌟 필터 의존성 주입
+    private final JwtFilter jwtFilter;
 
     public SecurityConfig(JwtFilter jwtFilter) {
         this.jwtFilter = jwtFilter;
@@ -30,12 +30,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/register", "/auth/login", "/error").permitAll()
-                        // 🌟 수정: /logs/** 를 permitAll에서 제거했습니다.
-                        // (/users/** 는 알림 설정 API 개발을 위해 일단 남겨둡니다)
-                        .requestMatchers("/users/**").permitAll()
-
-                        // 🌟 수정: 팀과 로그 모두 인증이 필요하도록 설정
-                        .requestMatchers("/teams/**", "/logs/**").authenticated()
+                        .requestMatchers("/teams/**", "/logs/**", "/users/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

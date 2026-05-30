@@ -11,9 +11,7 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, Long> {
 
     long countByTeam(Team team);
 
-    // 🌟 새로 추가: 특정 유저가 속한 팀원(TeamMember) 정보 찾기
     Optional<TeamMember> findByUser(User user);
 
-    // 🌟 새로 추가: 특정 팀에 속한 모든 팀원(TeamMember) 목록 찾기
     List<TeamMember> findByTeam(Team team);
 }

@@ -48,8 +48,6 @@ public class TeamService {
         return new TeamDto.CreateResponse(savedTeam.getId(), savedTeam.getName(), savedTeam.getInviteCode());
     }
 
-    // TeamService.java 내부 (기존 클래스 안에 추가)
-
     @Transactional
     public TeamDto.JoinResponse joinTeam(Long userId, TeamDto.JoinRequest request) {
         User user = userRepository.findById(userId)
@@ -103,8 +101,6 @@ public class TeamService {
                 memberInfos
         );
     }
-
-    // TeamService.java 내부의 기존 메서드들 아래에 추가합니다.
 
     @Transactional
     public TeamDto.MessageResponse leaveTeam(Long userId) {

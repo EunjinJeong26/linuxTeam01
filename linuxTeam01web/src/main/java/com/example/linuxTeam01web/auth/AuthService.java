@@ -25,7 +25,6 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 존재하는 username입니다.");
         }
 
-        // 🌟 비밀번호 암호화(encode) 후 저장
         String encodedPassword = passwordEncoder.encode(request.password());
         User newUser = new User(request.username(), encodedPassword);
 
@@ -38,7 +37,6 @@ public class AuthService {
         User user = userRepository.findByUsername(request.username())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "username 또는 password가 올바르지 않습니다."));
 
-        // 🌟 암호화된 비밀번호와 입력된 비밀번호 검증(matches)
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "username 또는 password가 올바르지 않습니다.");
         }

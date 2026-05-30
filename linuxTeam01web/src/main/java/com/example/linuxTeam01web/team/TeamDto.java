@@ -11,10 +11,8 @@ public class TeamDto {
     public record JoinRequest(String invite_code) {}
     public record JoinResponse(Long team_id, String name) {}
 
-    // 🌟 새로 추가: 멤버 개별 정보 DTO
     public record MemberInfo(Long user_id, String username, String role) {}
 
-    // 🌟 새로 추가: 내 팀 정보 응답 DTO (명세서의 JSON 구조와 완벽히 일치)
     public record MyTeamResponse(
             Long team_id,
             String name,
