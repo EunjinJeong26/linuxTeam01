@@ -24,4 +24,24 @@ public class JwtUtil {
                 .signWith(key) // SignatureAlgorithm 파라미터 생략 가능
                 .compact();
     }
+
+    // 토큰에서 username 파싱
+    public String getUsername(String token) {
+        return Jwts.parser()
+                .verifyWith(key) // 0.12.x 문법
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+    }
+
+    // 토큰 유효성 검증
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+            return true;
+        } catch (Exception e) {
+            return false; // 만료되거나 손상된 토큰이면 false 반환
+        }
+    }
 }

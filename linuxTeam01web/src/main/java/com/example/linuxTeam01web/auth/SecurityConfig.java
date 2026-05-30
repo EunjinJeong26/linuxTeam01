@@ -8,10 +8,17 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    private final JwtFilter jwtFilter; // 🌟 필터 의존성 주입
+
+    public SecurityConfig(JwtFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -20,15 +27,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // 1. REST API용 CSRF 비활성화 (이 부분이 적용 안 되면 POST 요청 시 403이 뜹니다)
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // 2. 인증 예외 경로 설정
                 .authorizeHttpRequests(auth -> auth
-                        // 내부 에러 페이지(/error)를 반드시 허용해야 403 대신 정확한 MVC 에러를 확인할 수 있습니다.
-                        .requestMatchers("/auth/register", "/auth/login", "/error", "/teams/**").permitAll()
+                        .requestMatchers("/auth/register", "/auth/login", "/error").permitAll()
+                        // 🌟 팀원이 작업할 경로는 임시로 인증 면제
+                        .requestMatchers("/logs/**", "/users/**").permitAll()
+                        // 🌟 내가 만든 팀 도메인은 인증 필수
+                        .requestMatchers("/teams/**").authenticated()
                         .anyRequest().authenticated()
-                );
+                )
+                // 🌟 UsernamePassword 인증 전에 우리의 JwtFilter를 먼저 실행
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
