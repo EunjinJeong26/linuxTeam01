@@ -30,13 +30,14 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/register", "/auth/login", "/error").permitAll()
-                        // 🌟 팀원이 작업할 경로는 임시로 인증 면제
-                        .requestMatchers("/logs/**", "/users/**").permitAll()
-                        // 🌟 내가 만든 팀 도메인은 인증 필수
-                        .requestMatchers("/teams/**").authenticated()
+                        // 🌟 수정: /logs/** 를 permitAll에서 제거했습니다.
+                        // (/users/** 는 알림 설정 API 개발을 위해 일단 남겨둡니다)
+                        .requestMatchers("/users/**").permitAll()
+
+                        // 🌟 수정: 팀과 로그 모두 인증이 필요하도록 설정
+                        .requestMatchers("/teams/**", "/logs/**").authenticated()
                         .anyRequest().authenticated()
                 )
-                // 🌟 UsernamePassword 인증 전에 우리의 JwtFilter를 먼저 실행
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
