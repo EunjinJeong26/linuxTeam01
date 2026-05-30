@@ -4,11 +4,11 @@ import lombok.Getter;
 
 @Getter
 public class NotifyResponse {
-    private final String username;
+    private final Long userId;
     private final Boolean notifyEnabled;
 
-    public NotifyResponse(String username, Boolean notifyEnabled) {
-        this.username = username;
+    public NotifyResponse(Long userId, Boolean notifyEnabled) {
+        this.userId = userId;
         this.notifyEnabled = notifyEnabled;
     }
 }
