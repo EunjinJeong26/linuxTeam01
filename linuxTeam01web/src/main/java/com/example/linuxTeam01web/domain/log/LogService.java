@@ -1,7 +1,9 @@
 package com.example.linuxTeam01web.domain.log;
 
+import com.example.linuxTeam01web.websocket.LogWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -11,51 +13,81 @@ import java.util.List;
 public class LogService {
 
     private final LogRepository logRepository;
+    private final LogCommitRepository logCommitRepository;
+    private final LogWebSocketHandler logWebSocketHandler;
 
-    // devlog post : 로그 저장
-    public Log createLog(String username, Long teamId,
-                         Double cpuUsage, Double memUsage,
-                         String gitCommitHash, String gitCommitMsg, String comment) {
+    @Transactional
+    public LogResponse createLog(Long userId, LogCreateRequest request) {
 
-        // 서버에서 현재 날짜/시간 자동 계산
-        LocalDateTime now = LocalDateTime.now();
-        String today = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        Integer sessionHour = now.getHour(); // 클라이언트에서 안 받고 서버가 직접 계산
+        // 세션 시각 자동 계산 (현재 시간 기준 "yyyy-MM-dd'T'HH:00")
+        String session = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:00"));
 
-        // 같은 슬롯에 이미 로그가 있으면 에러
-        logRepository.findByUsernameAndTeamIdAndSessionDateAndSessionHour(
-                username, teamId, today, sessionHour)
+        // 같은 슬롯 중복 체크
+        logRepository.findByUserIdAndTeamIdAndSession(userId, request.getTeamId(), session)
                 .ifPresent(log -> {
                     throw new IllegalStateException("이미 해당 시간에 로그가 존재합니다.");
                 });
 
         // 댓글 150자 초과 체크
-        if (comment != null && comment.length() > 150) {
+        if (request.getComment() != null && request.getComment().length() > 150) {
             throw new IllegalArgumentException("댓글은 150자를 초과할 수 없습니다.");
         }
 
+        // 로그 저장
         Log log = new Log();
-        log.setUsername(username);
-        log.setTeamId(teamId);
-        log.setSessionDate(today);
-        log.setSessionHour(sessionHour);
-        log.setCpuUsage(cpuUsage);
-        log.setMemUsage(memUsage);
-        log.setGitCommitHash(gitCommitHash);
-        log.setGitCommitMsg(gitCommitMsg);
-        log.setComment(comment);
-        log.setPostedAt(now.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        log.setUserId(userId);
+        log.setTeamId(request.getTeamId());
+        log.setSession(session);
+        log.setCpuUsage(request.getCpuUsage());
+        log.setMemUsedGb(request.getMemUsedGb());
+        log.setMemTotalGb(request.getMemTotalGb());
+        log.setBranch(request.getBranch());
+        log.setComment(request.getComment());
+        log.setCreatedAt(LocalDateTime.now()
+                .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 
-        return logRepository.save(log);
+        Log saved = logRepository.save(log);
+
+        // 커밋 메시지 저장
+        if (request.getCommits() != null) {
+            for (String message : request.getCommits()) {
+                LogCommit commit = new LogCommit();
+                commit.setLogId(saved.getLogId());
+                commit.setMessage(message);
+                logCommitRepository.save(commit);
+            }
+        }
+
+        // 커밋 메시지 목록 조회
+        List<String> commits = logCommitRepository.findByLogId(saved.getLogId())
+                .stream().map(LogCommit::getMessage).toList();
+
+        LogResponse response = new LogResponse(saved, commits);
+
+        // 웹소켓 푸시
+        logWebSocketHandler.broadcastLog(saved.getTeamId(), response);
+
+        return response;
     }
 
-    // devlog show : 팀 전체 로그 조회
-    public List<Log> getTeamLogs(Long teamId, String date) {
-        return logRepository.findByTeamIdAndSessionDate(teamId, date);
+    // devlog show --team
+    public List<LogResponse> getTeamLogs(Long teamId, String date) {
+        return logRepository.findByTeamIdAndSessionStartingWith(teamId, date)
+                .stream()
+                .map(log -> new LogResponse(log,
+                        logCommitRepository.findByLogId(log.getLogId())
+                                .stream().map(LogCommit::getMessage).toList()))
+                .toList();
     }
 
-    // devlog show --my : 내 로그만 조회
-    public List<Log> getMyLogs(Long teamId, String date, String username) {
-        return logRepository.findByTeamIdAndSessionDateAndUsername(teamId, date, username);
+    // devlog show --my
+    public List<LogResponse> getMyLogs(Long teamId, String date, Long userId) {
+        return logRepository.findByTeamIdAndSessionStartingWithAndUserId(teamId, date, userId)
+                .stream()
+                .map(log -> new LogResponse(log,
+                        logCommitRepository.findByLogId(log.getLogId())
+                                .stream().map(LogCommit::getMessage).toList()))
+                .toList();
     }
 }

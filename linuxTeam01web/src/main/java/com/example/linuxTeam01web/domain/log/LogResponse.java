@@ -1,33 +1,33 @@
 package com.example.linuxTeam01web.domain.log;
 
 import lombok.Getter;
+import java.util.List;
 
 @Getter
 public class LogResponse {
     private final Long logId;
-    private final String username;
+    private final Long userId;
     private final Long teamId;
-    private final String sessionDate;
-    private final Integer sessionHour;
-    private final Double cpuUsage;
-    private final Double memUsage;
-    private final String gitCommitHash;
-    private final String gitCommitMsg;
+    private final String session;
+    private final Integer cpuUsage;
+    private final Double memUsedGb;
+    private final Double memTotalGb;
+    private final String branch;
     private final String comment;
-    private final String postedAt;
+    private final String createdAt;
+    private final List<String> commits;
 
-    // Log 엔티티를 받아서 Response로 변환
-    public LogResponse(Log log) {
+    public LogResponse(Log log, List<String> commits) {
         this.logId = log.getLogId();
-        this.username = log.getUsername();
+        this.userId = log.getUserId();
         this.teamId = log.getTeamId();
-        this.sessionDate = log.getSessionDate();
-        this.sessionHour = log.getSessionHour();
+        this.session = log.getSession();
         this.cpuUsage = log.getCpuUsage();
-        this.memUsage = log.getMemUsage();
-        this.gitCommitHash = log.getGitCommitHash();
-        this.gitCommitMsg = log.getGitCommitMsg();
+        this.memUsedGb = log.getMemUsedGb();
+        this.memTotalGb = log.getMemTotalGb();
+        this.branch = log.getBranch();
         this.comment = log.getComment();
-        this.postedAt = log.getPostedAt();
+        this.createdAt = log.getCreatedAt();
+        this.commits = commits;
     }
 }

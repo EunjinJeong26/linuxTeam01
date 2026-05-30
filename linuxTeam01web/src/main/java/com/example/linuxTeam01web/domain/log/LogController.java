@@ -2,6 +2,7 @@ package com.example.linuxTeam01web.domain.log;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -13,42 +14,28 @@ public class LogController {
 
     private final LogService logService;
 
-    // POST /logs : devlog post
+    // POST /logs
     @PostMapping
-    public ResponseEntity<Log> createLog(@RequestBody LogCreateRequest request,
-                                         @RequestHeader("X-Username") String username) {
-        Log log = logService.createLog(
-                username,
-                request.getTeamId(),
-                request.getSessionHour(),
-                request.getCpuUsage(),
-                request.getMemUsage(),
-                request.getGitCommitHash(),
-                request.getGitCommitMsg(),
-                request.getComment()
-        );
-        return ResponseEntity.ok(new LogResponse(log));
+    public ResponseEntity<LogResponse> createLog(@RequestBody LogCreateRequest request) {
+        Long userId = (Long) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        return ResponseEntity.ok(logService.createLog(userId, request));
     }
 
-    // GET /logs?date=2026-05-29 : devlog show
+    // GET /logs?teamId=1&date=2026-05-08&my=false
     @GetMapping
-    public ResponseEntity<List<Log>> getTeamLogs(@RequestParam Long teamId,
-                                                  @RequestParam(required = false) String date,
-                                                  @RequestHeader("X-Username") String username,
-                                                  @RequestParam(defaultValue = "false") boolean my) {
-        // date 없으면 오늘 날짜 자동 사용
+    public ResponseEntity<List<LogResponse>> getLogs(@RequestParam Long teamId,
+                                                      @RequestParam(required = false) String date,
+                                                      @RequestParam(defaultValue = "false") boolean my) {
+        Long userId = (Long) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+
         String targetDate = (date != null) ? date : LocalDate.now().toString();
 
-        List<Log> logs = my
-                ? logService.getMyLogs(teamId, targetDate, username)
+        List<LogResponse> logs = my
+                ? logService.getMyLogs(teamId, targetDate, userId)
                 : logService.getTeamLogs(teamId, targetDate);
 
-        // Log 리스트 → LogResponse 리스트로 변환
-        List<LogResponse> response = logs.stream()
-                .map(LogResponse::new)
-                .toList();
-
-        return ResponseEntity.ok(response);
-
+        return ResponseEntity.ok(logs);
     }
 }
