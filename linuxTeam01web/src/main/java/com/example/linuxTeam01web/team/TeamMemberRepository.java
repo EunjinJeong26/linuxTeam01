@@ -16,4 +16,7 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, Long> {
 
     // 🌟 새로 추가: 특정 팀에 속한 모든 팀원(TeamMember) 목록 찾기
     List<TeamMember> findByTeam(Team team);
+
+    // 추가: 특정 유저가 특정 팀의 멤버인지 확인
+    boolean existsByUserAndTeam(User user, Team team);
 }
