@@ -1,5 +1,10 @@
 package com.example.linuxTeam01web.domain.log;
 
+import com.example.linuxTeam01web.auth.User;                    
+import com.example.linuxTeam01web.auth.UserRepository;          
+import com.example.linuxTeam01web.team.Team;                    
+import com.example.linuxTeam01web.team.TeamRepository;          
+import com.example.linuxTeam01web.team.TeamMemberRepository;    
 import com.example.linuxTeam01web.websocket.LogWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,9 +20,28 @@ public class LogService {
     private final LogRepository logRepository;
     private final LogCommitRepository logCommitRepository;
     private final LogWebSocketHandler logWebSocketHandler;
+    private final UserRepository userRepository;
+    private final TeamRepository teamRepository;
+    private final TeamMemberRepository teamMemberRepository;
+
+    // 추가: 팀 멤버인지 검증
+    private void validateTeamMember(Long userId, Long teamId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."));
+
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "팀을 찾을 수 없습니다."));
+
+        boolean isMember = teamMemberRepository.existsByUserAndTeam(user, team);
+        if (!isMember) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 팀의 멤버가 아닙니다.");
+        }
+    }
 
     @Transactional
     public LogResponse createLog(Long userId, LogCreateRequest request) {
+
+        validateTeamMember(userId, request.getTeamId());
 
         // 세션 시각 자동 계산 (현재 시간 기준 "yyyy-MM-dd'T'HH:00")
         String session = LocalDateTime.now()
@@ -73,6 +97,9 @@ public class LogService {
 
     // devlog show --team
     public List<LogResponse> getTeamLogs(Long teamId, String date) {
+
+        validateTeamMember(userId, teamId);
+
         return logRepository.findByTeamIdAndSessionStartingWith(teamId, date)
                 .stream()
                 .map(log -> new LogResponse(log,
@@ -83,6 +110,9 @@ public class LogService {
 
     // devlog show --my
     public List<LogResponse> getMyLogs(Long teamId, String date, Long userId) {
+
+        validateTeamMember(userId, teamId);
+        
         return logRepository.findByTeamIdAndSessionStartingWithAndUserId(teamId, date, userId)
                 .stream()
                 .map(log -> new LogResponse(log,
