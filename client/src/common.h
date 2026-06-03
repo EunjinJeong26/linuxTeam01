@@ -1,6 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#define API_BASE_URL "http://localhost:8080"
+
 #define MAX_USERNAME_LEN 64
 #define MAX_PASSWORD_LEN 128
 #define MAX_COMMENT_LEN  450  /* 150 Korean chars * 3 bytes (UTF-8) */
