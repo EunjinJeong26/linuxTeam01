@@ -162,21 +162,43 @@ int api_get_logs(const char *token, const char *date, int my_only,
 
 int api_team_create(const char *token, const char *name,
                     char *invite_code_out, int buf_size) {
-    (void)token; (void)name; (void)invite_code_out; (void)buf_size;
-    return 0;
+    char body[MAX_TEAM_NAME_LEN + 32];
+    snprintf(body, sizeof(body), "{\"name\":\"%s\"}", name);
+
+    char resp[1024];
+    int status = http_request("POST", "/teams", token, body,
+                              resp, sizeof(resp));
+    if (status == 201 || status == 200) {
+        if (json_extract_string(resp, "invite_code", invite_code_out, buf_size) != 0)
+            return -1;
+        return 0;
+    }
+    if (status == 409) return -2;   /* 이미 팀에 소속 */
+    return -1;
 }
 
 int api_team_join(const char *token, const char *invite_code) {
-    (void)token; (void)invite_code;
-    return 0;
+    char body[MAX_INVITE_CODE_LEN + 32];
+    snprintf(body, sizeof(body), "{\"invite_code\":\"%s\"}", invite_code);
+
+    int status = http_request("POST", "/teams/join", token, body, NULL, 0);
+    if (status == 200 || status == 201) return 0;
+    if (status == 404) return -2;   /* 존재하지 않는 초대 코드 */
+    if (status == 409) return -3;   /* 이미 소속 또는 인원 초과 (통합) */
+    return -1;
 }
 
 int api_team_info(const char *token, char *out_buf, int buf_size) {
-    (void)token; (void)out_buf; (void)buf_size;
-    return 0;
+    int status = http_request("GET", "/teams/me", token, NULL,
+                              out_buf, buf_size);
+    if (status == 200) return 0;
+    if (status == 404) return -2;   /* 소속된 팀 없음 */
+    return -1;
 }
 
-int api_team_leave(const char *token) {
-    (void)token;
-    return 0;
+int api_team_leave(const char *token, char *out_buf, int buf_size) {
+    int status = http_request("DELETE", "/teams/me/delete", token, NULL,
+                              out_buf, buf_size);
+    if (status == 200) return 0;
+    return -1;   /* 실패 사유는 out_buf의 응답 본문으로 전달 */
 }

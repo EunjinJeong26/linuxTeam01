@@ -10,6 +10,6 @@ int api_login(const char *username, const char *password, char *token_out, int t
 int api_team_create(const char *token, const char *name, char *invite_code_out, int buf_size);
 int api_team_join(const char *token, const char *invite_code);
 int api_team_info(const char *token, char *out_buf, int buf_size);
-int api_team_leave(const char *token);
+int api_team_leave(const char *token, char *out_buf, int buf_size);
 
 #endif /* API_H */
