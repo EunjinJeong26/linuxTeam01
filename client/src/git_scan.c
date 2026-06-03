@@ -9,6 +9,31 @@
 
 #define MAX_DEPTH 5
 
+/* .git/HEAD에서 현재 브랜치명 추출 ("ref: refs/heads/main" → "main").
+ * detached HEAD(직접 해시)이거나 읽기 실패 시 빈 문자열. */
+static void read_branch(const char *git_dir, char *branch, int size) {
+    branch[0] = '\0';
+
+    char path[600];
+    snprintf(path, sizeof(path), "%s/HEAD", git_dir);
+
+    FILE *fp = fopen(path, "r");
+    if (!fp) return;
+
+    char line[512];
+    if (fgets(line, sizeof(line), fp)) {
+        size_t len = strlen(line);
+        if (len > 0 && line[len - 1] == '\n') line[len - 1] = '\0';
+
+        const char *prefix = "ref: refs/heads/";
+        if (strncmp(line, prefix, strlen(prefix)) == 0) {
+            strncpy(branch, line + strlen(prefix), size - 1);
+            branch[size - 1] = '\0';
+        }
+    }
+    fclose(fp);
+}
+
 /* .git/logs/HEAD 마지막 줄 파싱: hash, message, timestamp 추출 */
 static int parse_head_log(const char *git_dir, char *hash, char *msg, long long *ts) {
     char path[600];
@@ -216,9 +241,9 @@ int cmd_git(int argc, char *argv[]) {
 }
 
 int git_scan_collect(GitInfo *out) {
-    out->repo_path[0]        = '\0';
-    out->last_commit_hash[0] = '\0';
-    out->last_commit_msg[0]  = '\0';
+    out->repo_path[0]       = '\0';
+    out->branch[0]          = '\0';
+    out->last_commit_msg[0] = '\0';
 
     sqlite3 *db = db_open();
     if (!db) return -1;
@@ -243,8 +268,8 @@ int git_scan_collect(GitInfo *out) {
 
     if (best.ts < 0) return -1;
 
-    strncpy(out->repo_path,        best.repo, sizeof(out->repo_path) - 1);
-    strncpy(out->last_commit_hash, best.hash, sizeof(out->last_commit_hash) - 1);
-    strncpy(out->last_commit_msg,  best.msg,  sizeof(out->last_commit_msg) - 1);
+    strncpy(out->repo_path,       best.repo, sizeof(out->repo_path) - 1);
+    strncpy(out->last_commit_msg, best.msg,  sizeof(out->last_commit_msg) - 1);
+    read_branch(best.path, out->branch, sizeof(out->branch));
     return 0;
 }

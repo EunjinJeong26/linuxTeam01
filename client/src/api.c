@@ -150,14 +150,30 @@ int api_login(const char *username, const char *password,
 }
 
 int api_post_log(const char *token, const char *json_body) {
-    (void)token; (void)json_body;
-    return 0;
+    int status = http_request("POST", "/logs", token, json_body, NULL, 0);
+    if (status == 201 || status == 200) return 0;
+    if (status == 404) return -2;   /* 소속된 팀 없음 */
+    if (status == 409) return -3;   /* 현재 세션에 이미 게시한 로그 존재 */
+    return -1;
 }
 
 int api_get_logs(const char *token, const char *date, int my_only,
                  char *out_buf, int buf_size) {
-    (void)token; (void)date; (void)my_only; (void)out_buf; (void)buf_size;
-    return 0;
+    /* 쿼리 파라미터 조립: date 미지정 시 생략(서버가 오늘로 처리) */
+    char path[128];
+    int n = snprintf(path, sizeof(path), "/logs");
+    const char *sep = "?";
+    if (date && date[0] != '\0') {
+        n += snprintf(path + n, sizeof(path) - n, "%sdate=%s", sep, date);
+        sep = "&";
+    }
+    if (my_only)
+        snprintf(path + n, sizeof(path) - n, "%smy=true", sep);
+
+    int status = http_request("GET", path, token, NULL, out_buf, buf_size);
+    if (status == 200) return 0;
+    if (status == 404) return -2;   /* 소속된 팀 없음 */
+    return -1;
 }
 
 int api_team_create(const char *token, const char *name,
