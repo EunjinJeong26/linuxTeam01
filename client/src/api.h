@@ -11,5 +11,6 @@ int api_team_create(const char *token, const char *name, char *invite_code_out, 
 int api_team_join(const char *token, const char *invite_code);
 int api_team_info(const char *token, char *out_buf, int buf_size);
 int api_team_leave(const char *token, char *out_buf, int buf_size);
+int api_notify_set(const char *token, int notify);
 
 #endif /* API_H */

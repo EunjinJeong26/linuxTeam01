@@ -218,3 +218,12 @@ int api_team_leave(const char *token, char *out_buf, int buf_size) {
     if (status == 200) return 0;
     return -1;   /* 실패 사유는 out_buf의 응답 본문으로 전달 */
 }
+
+int api_notify_set(const char *token, int notify) {
+    char body[32];
+    snprintf(body, sizeof(body), "{\"notify\":%s}", notify ? "true" : "false");
+
+    int status = http_request("PATCH", "/users/me/notify", token, body, NULL, 0);
+    if (status == 200 || status == 204) return 0;
+    return -1;
+}
