@@ -7,8 +7,10 @@ import com.example.linuxTeam01web.team.TeamRepository;
 import com.example.linuxTeam01web.team.TeamMemberRepository;    
 import com.example.linuxTeam01web.websocket.LogWebSocketHandler;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -96,7 +98,7 @@ public class LogService {
     }
 
     // devlog show --team
-    public List<LogResponse> getTeamLogs(Long teamId, String date) {
+    public List<LogResponse> getTeamLogs(Long teamId, String date, Long userId) {
 
         validateTeamMember(userId, teamId);
 
