@@ -1,9 +1,0 @@
-spring:
-  application:
-    name: devlog-server
-  datasource:
-    url: jdbc:sqlite:devlog.sqlite
-    driver-class-name: org.sqlite.JDBC
-
-server:
-  port: 8080
