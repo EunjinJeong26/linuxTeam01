@@ -157,18 +157,14 @@ int api_post_log(const char *token, const char *json_body) {
     return -1;
 }
 
-int api_get_logs(const char *token, const char *date, int my_only,
+int api_get_logs(const char *token, int team_id, const char *date, int my_only,
                  char *out_buf, int buf_size) {
-    /* 쿼리 파라미터 조립: date 미지정 시 생략(서버가 오늘로 처리) */
     char path[128];
-    int n = snprintf(path, sizeof(path), "/logs");
-    const char *sep = "?";
-    if (date && date[0] != '\0') {
-        n += snprintf(path + n, sizeof(path) - n, "%sdate=%s", sep, date);
-        sep = "&";
-    }
+    int n = snprintf(path, sizeof(path), "/logs?teamId=%d", team_id);
+    if (date && date[0] != '\0')
+        n += snprintf(path + n, sizeof(path) - n, "&date=%s", date);
     if (my_only)
-        snprintf(path + n, sizeof(path) - n, "%smy=true", sep);
+        snprintf(path + n, sizeof(path) - n, "&my=true");
 
     int status = http_request("GET", path, token, NULL, out_buf, buf_size);
     if (status == 200) return 0;

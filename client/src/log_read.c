@@ -146,9 +146,28 @@ int cmd_show(int argc, char *argv[]) {
         strftime(header_date, sizeof(header_date), "%Y-%m-%d", lt);
     }
 
+    /* 팀 정보 조회: team_id 확보 + userId→username 매핑 */
+    MemberEntry members[MAX_MEMBERS];
+    int member_count = 0;
+    int team_id = -1;
+    {
+        char team_resp[2048];
+        if (api_team_info(sess.token, team_resp, sizeof(team_resp)) != 0) {
+            fprintf(stderr, "팀에 소속되어 있지 않습니다.\n");
+            return -1;
+        }
+        int found = 0;
+        team_id = (int)json_num_after(team_resp, "team_id", &found);
+        if (!found || team_id <= 0) {
+            fprintf(stderr, "팀 정보 파싱 실패\n");
+            return -1;
+        }
+        member_count = build_member_map(team_resp, members, MAX_MEMBERS);
+    }
+
     /* 로그 조회 */
     char resp[16384];
-    int rc = api_get_logs(sess.token, date_buf[0] ? date_buf : NULL,
+    int rc = api_get_logs(sess.token, team_id, date_buf[0] ? date_buf : NULL,
                           flag_my, resp, sizeof(resp));
     if (rc == -2) {
         fprintf(stderr, "팀에 소속되어 있지 않습니다.\n");
@@ -157,15 +176,6 @@ int cmd_show(int argc, char *argv[]) {
     if (rc != 0) {
         fprintf(stderr, "로그 조회 실패\n");
         return -1;
-    }
-
-    /* userId → username 매핑용 멤버 맵 구성 (실패해도 fallback 출력) */
-    MemberEntry members[MAX_MEMBERS];
-    int member_count = 0;
-    {
-        char team_resp[2048];
-        if (api_team_info(sess.token, team_resp, sizeof(team_resp)) == 0)
-            member_count = build_member_map(team_resp, members, MAX_MEMBERS);
     }
 
     printf("=== %s 팀 현황 ===\n", header_date);
