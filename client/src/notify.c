@@ -1,4 +1,7 @@
 #include "notify.h"
+#include "api.h"
+#include "session.h"
+#include "common.h"
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -57,22 +60,37 @@ int cmd_notify(int argc, char *argv[]) {
 
     const char *arg = argv[2];
     const char *msg;
+    int notify;
 
     if (strcmp(arg, "on") == 0) {
         msg = "NOTIFY_ON\n";
+        notify = 1;
     } else if (strcmp(arg, "off") == 0) {
         msg = "NOTIFY_OFF\n";
+        notify = 0;
     } else {
         fprintf(stderr, "Usage: devlog notify <on|off>\n");
         return 1;
     }
 
-    char resp[BUF_SIZE];
-    if (send_to_daemon(msg, resp, sizeof(resp)) < 0) {
-        fprintf(stderr, "devlogd에 연결할 수 없습니다. 데몬이 실행 중인지 확인하세요.\n");
+    /* 서버에 알림 설정 반영 (로그인 필요) */
+    Session sess;
+    if (session_load(&sess) != 0 || sess.token[0] == '\0') {
+        fprintf(stderr, "로그인이 필요합니다.\n");
+        return 1;
+    }
+    if (api_notify_set(sess.token, notify) != 0) {
+        fprintf(stderr, "알림 설정 서버 반영에 실패했습니다.\n");
         return 1;
     }
 
-    printf("알림 %s\n", strcmp(arg, "on") == 0 ? "활성화됨" : "비활성화됨");
+    /* 로컬 데몬에 알림 스케줄 제어 전달 */
+    char resp[BUF_SIZE];
+    if (send_to_daemon(msg, resp, sizeof(resp)) < 0) {
+        fprintf(stderr, "알림 설정은 저장되었으나 devlogd에 연결할 수 없습니다. 데몬이 실행 중인지 확인하세요.\n");
+        return 1;
+    }
+
+    printf("알림 %s\n", notify ? "활성화됨" : "비활성화됨");
     return 0;
 }

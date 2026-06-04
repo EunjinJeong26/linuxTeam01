@@ -57,6 +57,9 @@ int sysinfo_collect(SysInfo *out) {
         fprintf(stderr, "sysinfo: /proc/meminfo 파싱 실패\n");
         return -1;
     }
-    out->mem_usage = (float)(1.0 - (double)mem_available / (double)mem_total) * 100.0f;
+    /* /proc/meminfo 단위는 kB → GB (1024*1024 kB) */
+    double kb_to_gb = 1.0 / (1024.0 * 1024.0);
+    out->mem_total_gb = (float)((double)mem_total * kb_to_gb);
+    out->mem_used_gb  = (float)((double)(mem_total - mem_available) * kb_to_gb);
     return 0;
 }

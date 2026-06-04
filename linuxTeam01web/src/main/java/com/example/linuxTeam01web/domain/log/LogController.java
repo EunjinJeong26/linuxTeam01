@@ -32,7 +32,7 @@ public class LogController {
 
         List<LogResponse> logs = my
                 ? logService.getMyLogs(teamId, targetDate, userId)
-                : logService.getTeamLogs(teamId, targetDate);
+                : logService.getTeamLogs(teamId, targetDate, userId);
 
         return ResponseEntity.ok(logs);
     }

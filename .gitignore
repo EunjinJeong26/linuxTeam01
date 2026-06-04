@@ -10,5 +10,8 @@ daemon/devlogd
 .vscode/
 .idea/
 
+# Claude Code (worktrees, local session state)
+.claude/
+
 # Personal notes
 TODO.md

@@ -1,6 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#define API_BASE_URL "http://localhost:8080"
+
 #define MAX_USERNAME_LEN 64
 #define MAX_PASSWORD_LEN 128
 #define MAX_COMMENT_LEN  450  /* 150 Korean chars * 3 bytes (UTF-8) */
@@ -21,14 +23,15 @@ typedef struct {
 } Team;
 
 typedef struct {
-    float cpu_usage;
-    float mem_usage;
+    float cpu_usage;      /* CPU 사용률 % */
+    float mem_used_gb;    /* 사용 중 메모리 (GB) */
+    float mem_total_gb;   /* 전체 메모리 (GB) */
 } SysInfo;
 
 typedef struct {
     char repo_path[MAX_PATH_LEN];
-    char last_commit_hash[41];
-    char last_commit_msg[256];
+    char branch[128];          /* 현재 브랜치명 */
+    char last_commit_msg[256]; /* 마지막 커밋 메시지 */
 } GitInfo;
 
 #endif /* COMMON_H */
