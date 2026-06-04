@@ -1,5 +1,5 @@
 #include <stdio.h>
-<parameter name="content">#include <stdlib.h>
+#include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
 #include "api.h"
@@ -217,7 +217,7 @@ int api_team_leave(const char *token, char *out_buf, int buf_size) {
 
 int api_notify_set(const char *token, int notify) {
     char body[32];
-    snprintf(body, sizeof(body), "{\"notify\":%s}", notify ? "true" : "false");
+    snprintf(body, sizeof(body), "{\"enabled\":%s}", notify ? "true" : "false");
 
     int status = http_request("PATCH", "/users/me/notify", token, body, NULL, 0);
     if (status == 200 || status == 204) return 0;

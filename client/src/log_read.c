@@ -1,5 +1,5 @@
 #include <stdio.h>
-<parameter name="content">#include <string.h>
+#include <string.h>
 #include <stdlib.h>
 #include <time.h>
 #include "log_read.h"

@@ -1,5 +1,5 @@
 #include <stdio.h>
-<parameter name="content">#include <string.h>
+#include <string.h>
 #include <stdlib.h>
 #include "log_write.h"
 #include "api.h"
