@@ -6,6 +6,10 @@ client/devlog
 client/src/*.o
 daemon/devlogd
 
+# Web frontend
+web/node_modules/
+web/dist/
+
 # IDE
 .vscode/
 .idea/
