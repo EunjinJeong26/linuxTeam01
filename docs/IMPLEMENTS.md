@@ -36,6 +36,17 @@
 | `daemon/devlogd.c` | 정각 알림 발송, UDS 서버 소켓, TTY 감지 후 BEL 출력 | `TODO` 주석만 존재 |
 | `client/src/api.c` | Spring Boot 서버 REST API 통신 (libcurl + JWT) | Phase 2 범위, 미착수 |
 
+### 웹 프론트엔드 구현 완료 (2026-06-12, M1~M5)
+
+| 위치 | 담당 기능 |
+| --- | --- |
+| `web/src/pages/` | 타임라인 그리드(`/`), 내 로그(`/me`), 팀 정보(`/team`), 로그인/회원가입 |
+| `web/src/api/` | axios 클라이언트(JWT 인터셉터, 401 처리), raw↔내부 모델 매퍼, mock 분기(`VITE_USE_MOCK`) |
+| `web/src/hooks/` | `useTeam`(팀 미소속 404 분기), `useTeamLogs`/`useMyLogs`(오늘만 60초 폴링) |
+| `web/scripts/seed-dev.ps1` | Windows 검증용 시드 (계정·팀·로그 REST 생성) |
+
+상세 명세: `web/WEB_FRONTEND_SPEC.md` (서버 코드 대조 완료본)
+
 ---
 
 ## [1] 팀 오너 탈퇴 시 팀 데이터 처리 🔴
@@ -133,3 +144,84 @@
 
 ### 결정
 > ⬜ 미정
+
+---
+
+## [4] POST /logs 중복 세션 시 500 응답 🔴
+
+**파일:** `linuxTeam01web/.../domain/log/LogService.java` — `createLog()`
+
+### 현상 (버그)
+
+같은 시각(세션)에 로그가 이미 존재하면 `IllegalStateException`을 던지는데, 예외 매핑이 없어 클라이언트가 **409 대신 500**을 받는다. 웹 시드 스크립트 검증 중 확인 (2026-06-12).
+
+### 선택안
+
+**A. `@ExceptionHandler` 또는 `@ControllerAdvice`로 409 매핑 (권장)**
+- `IllegalStateException` → 409 Conflict, `IllegalArgumentException`(150자 초과) → 400 Bad Request
+- 클라이언트(C/웹)가 상태 코드로 중복 여부 판단 가능해짐
+
+### 결정
+> ⬜ 미정
+
+---
+
+## [5] 서버 HTTP CORS 미설정 — 웹 배포 방식 결정 필요 🔴
+
+**파일:** `linuxTeam01web/.../auth/SecurityConfig.java`
+
+### 현상
+
+HTTP CORS 설정이 없어 웹 프론트가 다른 origin에서 API를 호출할 수 없다.
+개발 중에는 Vite proxy(`web/vite.config.ts`)로 우회 중이지만 **배포 시에는 해결 필수**.
+
+### 선택안
+
+**A. 동일 origin 서빙 (권장)**
+- `npm run build` 산출물(`web/dist/`)을 Spring `static/` 리소스로 포함
+- CORS 설정 자체가 불필요, 배포 단순(서버 1개)
+
+**B. 별도 호스팅 + 서버 CORS 추가**
+- `SecurityConfig`에 CORS 설정 추가, 허용 origin 관리 필요
+
+### 결정
+> ⬜ 미정
+
+---
+
+## [6] JWT 시크릿 키 하드코딩 🔴
+
+**파일:** `linuxTeam01web/.../auth/JwtUtil.java`
+
+### 현상 (보안)
+
+`SECRET_KEY`가 소스 코드에 하드코딩되어 저장소에 노출된다. 만료 시간(24h)도 상수 고정.
+
+### 선택안
+
+**A. 환경 변수/`application.yml` 외부화 (권장)**
+- `@Value("${devlog.jwt.secret}")` + 배포 환경에서 환경 변수 주입
+- 만료 시간도 설정으로 이동
+
+### 결정
+> ⬜ 미정 (MVP 데모까지는 현행 유지 가능)
+
+---
+
+## [7] 웹 프론트 P2 개선 후보 🟡
+
+**파일:** `web/src/` 전반
+
+배포 전 필수는 아니며, 시간 여유 시 진행:
+
+| 항목 | 내용 |
+| --- | --- |
+| 폴링 실검증 | 오늘 화면에서 60초 내 신규 로그 자동 반영 확인 (다음 정각 이후 시드 재실행) |
+| 모바일 점검 | 360px에서 그리드 가로 스크롤·터치 동작 시각 확인 |
+| 컴포넌트 테스트 | `TimelineGrid` 셀 매핑·선택 토글 테스트 추가 (현재 유틸/매퍼 12개만) |
+| 세션 만료 UX | 401 리다이렉트 시 "세션이 만료되었습니다" 안내 문구 |
+| STOMP 실시간 | 라이브러리(`@stomp/stompjs`) 도입 재결정 시 폴링 대체 (서버 `/ws` 준비됨) |
+| 서버 API 보강 연동 | 로그 응답에 `username`, 팀/멤버에 `createdAt`/`joinedAt` 추가되면 웹 매퍼 단순화 + 화면 보강 (명세서 5장 동시 갱신) |
+
+### 결정
+> 🟡 우선순위 논의 후 진행
