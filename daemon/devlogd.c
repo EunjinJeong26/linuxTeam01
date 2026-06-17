@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <time.h>
 #include <fcntl.h>
+#include <dirent.h>
+#include <pwd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/select.h>
@@ -22,19 +24,53 @@ static void handle_signal(int sig) {
     running = 0;
 }
 
+static void ring_bell_pts_for_uid(uid_t uid) {
+    DIR *d = opendir("/dev/pts");
+    if (!d) return;
+    struct dirent *ent;
+    while ((ent = readdir(d)) != NULL) {
+        if (ent->d_name[0] == '.') continue;
+        char path[64];
+        snprintf(path, sizeof(path), "/dev/pts/%s", ent->d_name);
+        struct stat st;
+        if (stat(path, &st) < 0 || st.st_uid != uid) continue;
+        int fd = open(path, O_WRONLY | O_NOCTTY | O_NONBLOCK);
+        if (fd >= 0) {
+            write(fd, "\a", 1);
+            close(fd);
+        }
+    }
+    closedir(d);
+}
+
 static void ring_bell(void) {
     struct utmp *entry;
     char tty_path[64];
     int fd;
 
+    uid_t seen_uids[32];
+    int seen_count = 0;
+
     setutent();
     while ((entry = getutent()) != NULL) {
         if (entry->ut_type != USER_PROCESS) continue;
+
         snprintf(tty_path, sizeof(tty_path), "/dev/%s", entry->ut_line);
         fd = open(tty_path, O_WRONLY | O_NOCTTY | O_NONBLOCK);
         if (fd >= 0) {
             write(fd, "\a", 1);
             close(fd);
+        }
+
+        struct passwd *pw = getpwnam(entry->ut_user);
+        if (!pw) continue;
+        int already = 0;
+        for (int i = 0; i < seen_count; i++) {
+            if (seen_uids[i] == pw->pw_uid) { already = 1; break; }
+        }
+        if (!already && seen_count < 32) {
+            seen_uids[seen_count++] = pw->pw_uid;
+            ring_bell_pts_for_uid(pw->pw_uid);
         }
     }
     endutent();
