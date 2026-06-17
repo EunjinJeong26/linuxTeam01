@@ -65,7 +65,8 @@ static int http_request(const char *method, const char *path,
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &resp);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L); /* 연결 수립까지 제한 */
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);        /* 전체 응답 제한(원격 콜드스타트 대비) */
 
     if (body) {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
