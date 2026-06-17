@@ -1,7 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#define API_BASE_URL "http://localhost:8080"
+#define API_BASE_URL "http://34.143.65.129:8080"
 
 #define MAX_USERNAME_LEN 64
 #define MAX_PASSWORD_LEN 128

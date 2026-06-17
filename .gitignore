@@ -3,12 +3,14 @@ server/devlog.sqlite
 
 # Build artifacts
 client/devlog
+client/devlogd
 client/src/*.o
 daemon/devlogd
 
 # Web frontend
 web/node_modules/
 web/dist/
+web/.vite/
 
 # IDE
 .vscode/
