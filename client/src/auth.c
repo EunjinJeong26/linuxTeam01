@@ -41,6 +41,12 @@ int cmd_register(void) {
 }
 
 int cmd_login(void) {
+    Session existing;
+    if (session_load(&existing) == 0) {
+        fprintf(stderr, "이미 로그인된 상태입니다. (%s)\n", existing.username);
+        return -1;
+    }
+
     char username[MAX_USERNAME_LEN];
     char password[MAX_PASSWORD_LEN];
 
