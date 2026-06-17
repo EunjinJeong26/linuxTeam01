@@ -5,9 +5,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/auth': 'http://localhost:8080',
-      '/teams': 'http://localhost:8080',
-      '/logs': 'http://localhost:8080',
+      '/auth': { target: 'http://34.143.65.129:8080', changeOrigin: true },
+      '/teams': { target: 'http://34.143.65.129:8080', changeOrigin: true },
+      '/logs': { target: 'http://34.143.65.129:8080', changeOrigin: true },
     },
   },
   test: {
